@@ -28,7 +28,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-The code hasn't been audited or reviewed by a cryptography export and is only minimally tested. Use it at your own risk. 
+The code hasn't been audited or reviewed by a cryptography expert and is only minimally tested. Use at your own risk. 
 
 ## TODO
 - [X] Basic unit tests for the smart contract
