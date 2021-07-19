@@ -1,77 +1,68 @@
 /* eslint-disable no-restricted-globals */
 import React, {useEffect, useRef, useState} from "react"
-import {COMMAND_PAUSE, COMMAND_RUN, COMMAND_STOP, COMMAND_UPDATE_PARAMETERS} from "./worker";
 
-
-// console.log(HashMiner)
 const TokenMiner = ({address, lastHash, recentBlockHash, maxTargetHash, onSuccess, onError}) => {
-    const workerRef = useRef(undefined)
+    const workerRef = useRef()
+    const [workerPaused, setWorkerPaused] = useState(false)
     const [workerState, setWorkerState] = useState({})
     const {result, progress, error, status} = workerState
 
     const _postMessage = msg => {
-        console.assert(workerRef.current, 'worker not set')
-        console.log('+++++++++', workerRef.current.postMessage.toString())
+        console.assert(workerRef.current, 'worker not started')
         workerRef.current.postMessage({...msg, dest: 'proof-of-work-worker'})
     }
     const _eventFilter = fn => ({data}) => {
         if (!data || !data.dest || !/^proof-of-work-client/gi.test(data.dest)) return
-        console.log('To client:', data)
         fn(data)
     }
     const _messageHandler = _eventFilter(data => setWorkerState({...workerState, ...data}))
 
-    const startWorker = async ev => {
-        workerRef.current = new Worker("worker-loader!./worker.js", {type: 'module'})
-        console.log('worker->>',workerRef.current)
-
+    useEffect(() => {
+        workerRef.current = new Worker("./worker.js", {type: 'module'})
         workerRef.current.addEventListener('message', _messageHandler)
         workerRef.current.addEventListener('error', _messageHandler)
         workerRef.current.addEventListener('messageerror', _messageHandler)
-
-
-
-        // addEventListener('message', _messageHandler)
-        // addEventListener('error', _messageHandler)
-        // addEventListener('messageerror', _messageHandler)
-
         _postMessage({address, lastHash, recentBlockHash, maxTargetHash})
-    }
+
+        return ev => {
+            if (workerRef.current) {
+                workerRef.current.removeEventListener('message', _messageHandler)
+                workerRef.current.removeEventListener('error', _messageHandler)
+                workerRef.current.removeEventListener('messageerror', _messageHandler)
+
+                workerRef.current.terminate()
+
+                setWorkerState({})
+                workerRef.current = undefined
+            }
+        };
+    }, [])
 
     useEffect(() => {
-        // if (workerRef && workerRef.current) {
-        //     console.log('posinting')
-        //
-        //     _postMessage({address, lastHash, recentBlockHash, maxTargetHash})
-        // }
-        return stopWorker
-    }, [workerRef.current])
+        const visibilityChangeListener = ev => setPause(document.hidden)
+        window.addEventListener('visibilitychange', visibilityChangeListener)
+        return () => window.removeEventListener('visibilitychange', visibilityChangeListener)
+    }, [])
 
-    const stopWorker = async ev => {
+    const setPause = value => {
         if (workerRef.current) {
-            console.log('stopping', workerRef.current)
-
-            workerRef.current.removeEventListener('message', _messageHandler)
-            workerRef.current.removeEventListener('error', _messageHandler)
-            workerRef.current.removeEventListener('messageerror', _messageHandler)
-
-            const exitCode = await workerRef.current.terminate()
-            console.log('worker stopped:', exitCode)
-
-            setWorkerState({})
-            workerRef.current = undefined
+            _postMessage({pause: value})
+            setWorkerPaused(value)
         }
     }
 
+    const onPause = ev => setPause(true)
+    const onResume = ev => setPause(false)
+
     useEffect(() => {
-        // console.log('>>>', workerState)
-        // _postMessage({address, lastHash, recentBlockHash, maxTargetHash})
+        if (workerRef.current)
+            _postMessage({address, lastHash, recentBlockHash, maxTargetHash})
     }, [address, lastHash, recentBlockHash, maxTargetHash]);
 
     return (
         <>
-            <button onClick={startWorker}>Start</button>
-            <button onClick={stopWorker}>Stop</button>
+            <button onClick={onPause} disabled={workerPaused}>Pause</button>
+            <button onClick={onResume} disabled={!workerPaused}>Resume</button>
             {error &&
             <div className='error'>
                 Mining accident occured: {error.toString()}

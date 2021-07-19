@@ -3,34 +3,41 @@ const {Buffer} = require("buffer")
 const ethers = require("ethers")
 
 let resultCount = 0
-let progress = {}
-let result = []
+let count = 0
+let paused = false
+let parameters = {}
+let running = false
+let elapsedTime = 0
 
 const beNice = () => {
     return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-const _postMessage = msg => self.postMessage({...msg, dest: 'proof-of-work-client' })
+const _postMessage = msg => self.postMessage({...msg, dest: 'proof-of-work-client'})
 
-onmessage = async ev => {
-    console.log('yo', ev.data)
-    if (!/^proof-of-work-worker/gi.test(ev.data.dest)) return
+self.addEventListener('message', ev => {
+    const {dest, pause, ..._rest} = ev.data
+    if (!/^proof-of-work-worker/gi.test(dest)) return
 
-    console.log('message received by worker:', ev.data)
+    paused = typeof (pause) === "boolean" && pause
+    parameters = {...parameters, ..._rest}
 
-    await run(ev.data)
-}
+    if (!running && !paused) {
+        run(parameters)
+    }
+})
 
-addEventListener('exit', ev => console.log('bye'))
+self.addEventListener('exit', ev => console.log('bye'))
 
-const run = async function({address, lastHash, recentBlockHash, maxTargetHash}) {
+const run = async function ({address, lastHash, recentBlockHash, maxTargetHash}) {
+    if (!address || !lastHash || !recentBlockHash || !maxTargetHash) return
+
     let nonce, hash
-    var count = 0
     let startTime = Date.now()
 
-    console.log('starting loop')
-    while (true) {
-        console.log('in loop')
+    running = true
+
+    while (!paused) {
         nonce = randomBuffer();
         const hashHex = ethers.utils.solidityKeccak256(
             ['address', 'bytes32', 'bytes32', 'bytes32'],
@@ -40,37 +47,35 @@ const run = async function({address, lastHash, recentBlockHash, maxTargetHash}) 
 
         // update and report progress
         ++count
-        const rawTime = (Date.now() - startTime)
-        const duration = Math.floor(rawTime / 1000);
-        const khps = Math.round(count / duration / 1000)
+        const rawTime = Date.now() - startTime + elapsedTime
 
         if (ethers.BigNumber.from(hash).lte(maxTargetHash)) {
-            console.log('sending result...')
             _postMessage({
                 result: {
                     count: ++resultCount,
                     nonce: nonce.toString('hex'),
                 },
-                progress: {
-                    time: duration,
-                    hash: hash.toString('hex'),
-                    hashes: count,
-                    khps
-                },
+                progress: getProgress(rawTime),
             })
             await beNice()
         } else if (!(rawTime % 1000)) {
-            console.log('sending progress...')
             _postMessage({
-                progress: {
-                    time: duration,
-                    hash: hash.toString('hex'),
-                    hashes: count,
-                    khps
-                },
+                progress: getProgress(rawTime),
             })
             await beNice()
         }
+    }
+    elapsedTime += Date.now() - startTime
+    running = false
+}
+
+const getProgress = rawTime => {
+    const duration = Math.floor(rawTime / 1000);
+    const khps = Math.round(count / duration / 1000)
+    return {
+        time: duration,
+        hashes: count,
+        khps
     }
 }
 
