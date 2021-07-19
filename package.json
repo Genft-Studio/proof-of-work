@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^6.2.0",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@testing-library/jest-dom": "^5.11.4",
@@ -14,18 +15,19 @@
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.0",
+    "jsdom-worker": "^0.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hooks-worker": "^1.0.0",
     "react-scripts": "4.0.3",
     "vue-loader": "^16.3.0",
-    "web-vitals": "^1.0.1"
+    "web-vitals": "^1.0.1",
+    "worker-loader": "^3.0.8",
+    "worker-plugin": "^5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test"
   },
   "eslintConfig": {
     "extends": [

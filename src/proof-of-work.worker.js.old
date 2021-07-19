@@ -1,0 +1,91 @@
+import {exposeWorker} from 'react-hooks-worker';
+import {Buffer} from "buffer";
+import {BigNumber, utils as EtherUtils} from "ethers"
+
+let paused = false
+
+function randomBuffer() {
+    var x = new Uint8Array(32);
+    for (var i = 0; i < 32; i++) {
+        x[i] = Math.floor(Math.random() * 256);
+    }
+    return x
+}
+
+// eslint-disable-next-line no-restricted-globals
+const mine = foo => self.postMessage({result: 'address:' + foo})
+
+const xmine = async ([address, lastHash, recentBlockHash, maxTargetHash]) => {
+    alert('foo')
+    // eslint-disable-next-line no-restricted-globals
+    self.postMessage({
+        progress: {
+            status: "running" + address,
+            // time,
+            // hash: hash.toString('hex'),
+            // hashes: count,
+            // khs: khps
+        }
+    })
+    return {
+        progress: {
+            status: "got here!" + address
+        },
+    }
+    // let nonce, hash
+    // var count = 0
+    // var startTime = Date.now();
+    // while (!paused) {
+    //     nonce = randomBuffer();
+    //
+    //     const hashHex = EtherUtils.solidityKeccak256(
+    //         ['address', 'bytes32', 'bytes32', "bytes32"],
+    //         [address, lastHash, recentBlockHash, nonce]
+    //     )
+    //     hash = Buffer.from(hashHex.slice(2), 'hex')
+    //
+    //     // update and report progress
+    //     ++count
+    //     const rawTime = (Date.now() - startTime)
+    //     const time = Math.floor(rawTime / 1000);
+    //     const khps = Math.round(count / rawTime / 1000)
+
+        // if (!(rawTime % 1000)) {
+        //     postMessage({
+        //         progress: {
+        //             time,
+        //             hash: hash.toString('hex'),
+        //             hashes: count,
+        //             khs: khps
+        //         }
+        //     })
+        // }
+        //
+        // if (BigNumber.from(hash).lte(maxTargetHash)) {
+        //     return ({
+        //         result: {
+        //             nonce: nonce.toString('hex'),
+        //         },
+        //         progress: {
+        //             time,
+        //             hash: hash.toString('hex'),
+        //             hashes: count,
+        //             khs: khps
+        //         }
+        //     })
+        // }
+    // }
+
+}
+
+exposeWorker(mine)
+
+// const testAddress = '0x534Eb19E729E955308e5A9c37c90d4128e0F450F'
+// const testLastHash =  '0x244f574c00000000000000000000000000000000000000000000000000000000'
+// const blockHash = '0x0803ea346224e704c43e35cb9506bd0dd8ceecbe0e932ae9ef6de78a4a717b03'
+// // const target = '0x0000003fffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+// const target = '0x0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+//
+// let result = mine([testAddress, testLastHash, blockHash, target])
+//
+// console.log(result)
