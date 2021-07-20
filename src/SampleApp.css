@@ -36,3 +36,26 @@
     transform: rotate(360deg);
   }
 }
+
+.word-hash {
+  font-size: 8px;
+  display: none;
+}
+
+.word-image {
+  width: 200px;
+  height: 200px;
+  text-align: center;
+  line-height: 200px;
+  font-size: 34px;
+  font-family: monospace;
+  font-weight: bold;
+  color: black;
+  margin: 10px;
+}
+
+.image-list {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+}

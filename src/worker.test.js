@@ -13,7 +13,9 @@ describe('Proof of work web worker', () => {
         const msgHandler = jest.fn()
 
         worker.addEventListener('message', msgHandler)
-        await worker.postMessage({text: 'say hello', source: 'proof-of-work-client'})
+        await worker.postMessage(
+
+        )
         expect(msgHandler).toBeCalled()
         expect(msgHandler).toBeCalledWith('hai')
     })

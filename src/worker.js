@@ -9,9 +9,9 @@ let parameters = {}
 let running = false
 let elapsedTime = 0
 
-const beNice = () => {
-    return new Promise(resolve => setTimeout(resolve, 0));
-}
+// The main worker loop consumes so much CPU that a pause message won't get processed. Calling beNice() every now and
+// then give the event listener a chance to run
+const beNice = () => new Promise(resolve => setTimeout(resolve, 0))
 
 const _postMessage = msg => self.postMessage({...msg, dest: 'proof-of-work-client'})
 
@@ -54,6 +54,10 @@ const run = async function ({address, lastHash, recentBlockHash, maxTargetHash})
                 result: {
                     count: ++resultCount,
                     nonce: nonce.toString('hex'),
+                    hash: hash.toString('hex'),
+                    address,
+                    lastHash,
+                    recentBlockHash
                 },
                 progress: getProgress(rawTime),
             })
@@ -65,17 +69,16 @@ const run = async function ({address, lastHash, recentBlockHash, maxTargetHash})
             await beNice()
         }
     }
+    // Accumulate elapsed time
     elapsedTime += Date.now() - startTime
     running = false
 }
 
 const getProgress = rawTime => {
     const duration = Math.floor(rawTime / 1000);
-    const khps = Math.round(count / duration / 1000)
     return {
         time: duration,
         hashes: count,
-        khps
     }
 }
 
